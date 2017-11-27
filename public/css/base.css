@@ -1,0 +1,28 @@
+.square {
+  background: #fff;
+  border: 1px solid #999;
+  float: left;
+  font-size: 40px;
+  font-weight: bold;
+  height: 200px;
+  line-height: 200px;
+  text-align: center;
+  width: 200px;
+}
+
+.square:focus {
+  outline: none;
+}
+
+.text {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: normal;
+}
+
+.score {
+  font-size: 60px;
+  font-weight: bold;
+  float: right;
+  padding-left: 50px;
+}
