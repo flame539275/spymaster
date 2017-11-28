@@ -36,7 +36,8 @@ class Landing extends React.Component {
     }
   }
 
-  joinGame() {
+  joinGame(event) {
+    event.preventDefault()
     const id = this.state.gameId
     const code = this.state.gameCode
     window.location.href = `http://${DOMAIN}/game?id=${id}&code=${code}`
