@@ -1,4 +1,7 @@
+const DOMAIN = 'boredgames.io'
+
 class Game extends React.Component {
+
   constructor(props) {
     super(props)
 
@@ -18,7 +21,7 @@ class Game extends React.Component {
 
   getCurrentState() {
     $.get({
-      url: `http://localhost:3000/game/${this.state.id}/${this.state.code}`,
+      url: `http://${DOMAIN}/game/${this.state.id}/${this.state.code}`,
       success: function(data) {
         this.setCurrentState(data)
         setTimeout(this.getCurrentState, 3000)

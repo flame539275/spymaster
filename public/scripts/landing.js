@@ -1,4 +1,7 @@
+const DOMAIN = 'boredgames.io'
+
 class Landing extends React.Component {
+
   constructor(props) {
     super(props)
     this.state = {
@@ -20,7 +23,7 @@ class Landing extends React.Component {
 
   createGame() {
     $.post({
-      url: 'http://localhost:3000/new_game',
+      url: `http://${DOMAIN}/new_game`,
       success: this.onCreateGame
     })
   }
@@ -36,7 +39,7 @@ class Landing extends React.Component {
   joinGame() {
     const id = this.state.gameId
     const code = this.state.gameCode
-    window.location.href = `http://localhost:3000/game?id=${id}&code=${code}`
+    window.location.href = `http://${DOMAIN}/game?id=${id}&code=${code}`
   }
 
   onCreateGame(data) {

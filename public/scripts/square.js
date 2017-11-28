@@ -1,3 +1,5 @@
+const DOMAIN = 'boredgames.io'
+
 class Square extends React.Component {
   constructor(props) {
     super(props)
@@ -11,7 +13,7 @@ class Square extends React.Component {
         const code = this.props.code
         const word = this.props.data
         $.post({
-          url: `http://localhost:3000/guess/${id}/${code}/${word}`
+          url: `http://${DOMAIN}/guess/${id}/${code}/${word}`
         })
       }
     }
