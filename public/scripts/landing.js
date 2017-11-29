@@ -1,4 +1,4 @@
-const DOMAIN = 'localhost:3000'
+const DOMAIN = 'boredgames.io'
 
 class Landing extends React.Component {
 
