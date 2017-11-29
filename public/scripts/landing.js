@@ -1,4 +1,4 @@
-const DOMAIN = 'boredgames.io'
+const DOMAIN = 'localhost:3000'
 
 class Landing extends React.Component {
 
@@ -16,6 +16,8 @@ class Landing extends React.Component {
     this.createGame = this.createGame.bind(this)
     this.handleChange = this.handleChange.bind(this)
     this.joinGame = this.joinGame.bind(this)
+    this.joinGameAsPlayer = this.joinGameAsPlayer.bind(this)
+    this.joinGameAsSpymaster = this.joinGameAsSpymaster.bind(this)
     this.onCreateGame = this.onCreateGame.bind(this)
     this.renderCreateForm = this.renderCreateForm.bind(this)
     this.renderJoinForm = this.renderJoinForm.bind(this)
@@ -43,6 +45,22 @@ class Landing extends React.Component {
     window.location.href = `http://${DOMAIN}/game?id=${id}&code=${code}`
   }
 
+  joinGameAsPlayer(event) {
+    event.preventDefault()
+    const id = this.state.game_id
+    const code = this.state.player_code
+    const url = `http://${DOMAIN}/game?id=${id}&code=${code}`
+    window.open(url, '_blank')
+  }
+
+  joinGameAsSpymaster(event) {
+    event.preventDefault()
+    const id = this.state.game_id
+    const code = this.state.spymaster_code
+    const url = `http://${DOMAIN}/game?id=${id}&code=${code}`
+    window.open(url, '_blank')
+  }
+
   onCreateGame(data) {
     this.setState({
       game_id: data.game_id,
@@ -53,10 +71,23 @@ class Landing extends React.Component {
 
   renderCreateForm() {
     return (
+      <div>
+        <h2>Create A Game</h2>
+        <button onClick={this.createGame}>Create Game</button>
+      </div>
+    )
+  }
+
+  renderJoinCreatedGameForm() {
+    if (this.state.game_id === '') {
+      return null;
+    }
+
+    return (
       <table>
         <tbody>
           <tr>
-            <td><h2>Create A Game</h2></td>
+            <td><h2>Newly Created Game</h2></td>
           </tr>
           <tr>
             <td>Game ID: </td>
@@ -65,13 +96,19 @@ class Landing extends React.Component {
           <tr>
             <td>Player Code: </td>
             <td>{this.state.player_code}</td>
+            <td>
+              <button onClick={this.joinGameAsPlayer}>Join as a Player</button>
+            </td>
           </tr>
           <tr>
             <td>Spymaster Code: </td>
             <td>{this.state.spymaster_code}</td>
+            <td>
+              <button onClick={this.joinGameAsSpymaster}>Join as a Spymaster</button>
+            </td>
           </tr>
           <tr>
-            <td><button onClick={this.createGame}>Create Game</button></td>
+            <td></td>
           </tr>
         </tbody>
       </table>
@@ -115,11 +152,13 @@ class Landing extends React.Component {
 
   render() {
     const createForm = this.renderCreateForm()
+    const joinCreatedGameForm = this.renderJoinCreatedGameForm()
     const joinForm = this.renderJoinForm()
 
     return(
       <div>
         {createForm}
+        {joinCreatedGameForm}
         {joinForm}
       </div>
     )
