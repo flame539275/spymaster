@@ -8,8 +8,8 @@ class Game extends React.Component {
     const params = location.search.substr(1).split("&")
     const id = params[0].split("=")[1]
     const code = params.length === 1 ? null: params[1].split("=")[1]
-    const gameUrl = gameCode == null ? `http://${DOMAIN}/game/${gameId}` :
-      `http://${DOMAIN}/game/${gameId}/${gameCode}`;
+    const gameUrl = code == null ? `http://${DOMAIN}/game/${id}` :
+      `http://${DOMAIN}/game/${id}/${code}`;
     this.state = {
       gameCode: code,
       gameId: id,

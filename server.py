@@ -61,7 +61,7 @@ def new_game():
             'error': 'Game with given game_id already exists.'
         }), 400
 
-    game = _create_new_game()
+    game = _create_new_game(game_id)
     db.games.insert_one(game)
     return flask.jsonify({
         'game_id': game['game_id'],
