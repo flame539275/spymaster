@@ -19,6 +19,11 @@ class Landing extends React.Component {
       data: JSON.stringify({ game_id: this.state.gameId }),
       url: `http://${DOMAIN}/new_game`,
       success: this.onCreateGame
+    }).fail(function(data) {
+      const response = data.responseJSON
+      if (response.error === "Game with given game_id already exists.") {
+        window.location.href = `http://${DOMAIN}/game?id=${response.game_id}`
+      }
     })
   }
 

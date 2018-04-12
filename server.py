@@ -58,6 +58,7 @@ def new_game():
     game_id = flask.request.get_json()['game_id']
     if game_id != '' and not db.games.find_one({'game_id': game_id}) is None:
         return flask.jsonify({
+            'game_id': game_id,
             'error': 'Game with given game_id already exists.'
         }), 400
 
