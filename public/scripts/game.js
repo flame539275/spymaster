@@ -6,12 +6,15 @@ class Game extends React.Component {
     super(props)
 
     const params = location.search.substr(1).split("&")
-    const gameId = params[0].split("=")[1]
-    const gameCode = params[1].split("=")[1]
+    const id = params[0].split("=")[1]
+    const code = params.length === 1 ? null: params[1].split("=")[1]
+    const gameUrl = gameCode == null ? `http://${DOMAIN}/game/${gameId}` :
+      `http://${DOMAIN}/game/${gameId}/${gameCode}`;
     this.state = {
-      id: gameId,
-      code: gameCode,
-      tiles: null
+      gameCode: code,
+      gameId: id,
+      tiles: null,
+      url: gameUrl
     }
 
     this.getCurrentState = this.getCurrentState.bind(this)
@@ -21,13 +24,13 @@ class Game extends React.Component {
 
   getCurrentState() {
     $.get({
-      url: `http://${DOMAIN}/game/${this.state.id}/${this.state.code}`,
+      url: this.state.url,
       success: function(data) {
         this.setCurrentState(data)
         setTimeout(this.getCurrentState, 3000)
       }.bind(this)
     }).fail(function(error) {
-      alert('Invalid game ID or game code')
+      console.log('Could not fetch updates for game.')
     })
   }
 
@@ -57,9 +60,9 @@ class Game extends React.Component {
       for (let j = 0; j < 5; j++) {
         const word = tileList[i * 5 + j]
         const square = <Square
-          code={this.state.code}
+          code={this.state.gameCode}
           data={word}
-          gameId={this.state.id}
+          gameId={this.state.gameId}
           isAssassin={this.state.assassin.has(word)}
           isBlue={this.state.blue.has(word)}
           isGuessed={this.state.guessed.has(word)}

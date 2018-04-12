@@ -1,11 +1,8 @@
-import bson.json_util
-import bson.objectid
 import flask
 import json
 import os
 import pymongo
 import random
-import uuid
 
 
 WORD_COUNT = 25
@@ -17,6 +14,7 @@ ASSASSIN_COUNT = 1
 app = flask.Flask(__name__, static_url_path='', static_folder='public')
 client = pymongo.MongoClient()
 db = client.test_database
+db.games.create_index('game_id', expireAfterSeconds=24*60*60) # ttl = 24 hours
 with open('wordlist.txt', 'r') as fp:
     words = set([line.strip() for line in fp.readlines()])
 
@@ -38,13 +36,12 @@ def game_page():
 
 @app.route('/guess/<game_id>/<code>/<word>', methods=['POST'])
 def guess_word(game_id, code, word):
-    real_id = bson.objectid.ObjectId(game_id)
-    game = db.games.find_one({'_id': real_id})
+    game = db.games.find_one({'game_id': game_id})
 
     if game is None:
         return flask.jsonify({'msg': 'Invalid game ID'}), 404
 
-    db.games.find_one_and_update({'_id': real_id},
+    db.games.find_one_and_update({'game_id': game_id},
         {
             '$push': {
                 'guessed': word
@@ -58,49 +55,39 @@ def guess_word(game_id, code, word):
 
 @app.route('/new_game', methods=['POST'])
 def new_game():
-    game = _create_game()
-    game_id = db.games.insert_one(game).inserted_id
+    game_id = flask.request.get_json()['game_id']
+    if game_id != '' and not db.games.find_one({'game_id': game_id}) is None:
+        return flask.jsonify({
+            'error': 'Game with given game_id already exists.'
+        }), 400
+
+    game = _create_new_game()
+    db.games.insert_one(game)
     return flask.jsonify({
-        'game_id': str(game_id),
-        'player_code': game['url_player'],
-        'spymaster_code': game['url_spymaster'],
+        'game_id': game['game_id'],
+        'spymaster_code': game['spymaster_code'],
     }), 200
 
 
 @app.route('/game/<game_id>/<code>', methods=['GET'])
+@app.route('/game/<game_id>', defaults={'code': None}, methods=['GET'])
 def join_game(game_id, code):
-    real_id = bson.objectid.ObjectId(game_id)
-    game = db.games.find_one({'_id': real_id})
+    game = db.games.find_one({'game_id': game_id})
 
     if game is None:
-        return flask.jsonify({'msg': 'Invalid game ID or Code'}), 404
-
-    if game['url_player'] != code and game['url_spymaster'] != code:
         return flask.jsonify({'msg': 'Invalid game ID or Code'}), 404
 
     return flask.jsonify(_return_game_data(game, code)), 200
 
 
-def _return_game_data(game, code):
+def _return_game_data(game, code=None):
     guessed = set(game['guessed'])
     blueGuessed = guessed.intersection(set(game['blue']))
     redGuessed = guessed.intersection(set(game['red']))
     blueScore = len(game['blue']) - len(blueGuessed)
     redScore = len(game['red']) - len(redGuessed)
 
-    if game['url_player'] == code:
-        return { 'assassin': list(guessed.intersection(set(game['assassin']))),
-                 'blue': list(blueGuessed),
-                 'guessed': game['guessed'],
-                 'isSpymaster': False,
-                 'neutral': list(guessed.intersection(set(game['neutral']))),
-                 'red': list(redGuessed),
-                 'tiles': game['tiles'],
-                 'blueScore': blueScore,
-                 'redScore': redScore,
-               }
-
-    if game['url_spymaster'] == code:
+    if str(game['spymaster_code']) == str(code):
         return { 'assassin': game['assassin'],
                  'blue': game['blue'],
                  'guessed': game['guessed'],
@@ -111,6 +98,27 @@ def _return_game_data(game, code):
                  'blueScore': blueScore,
                  'redScore': redScore,
                }
+
+    return { 'assassin': list(guessed.intersection(set(game['assassin']))),
+             'blue': list(blueGuessed),
+             'guessed': game['guessed'],
+             'isSpymaster': False,
+             'neutral': list(guessed.intersection(set(game['neutral']))),
+             'red': list(redGuessed),
+             'tiles': game['tiles'],
+             'blueScore': blueScore,
+             'redScore': redScore,
+           }
+
+
+def _create_new_game(game_id=''):
+    game = _create_game()
+    if game_id == '':
+        game_id = _create_game_id()
+    spymaster_code = _generate_spymaster_code()
+    game['game_id'] = game_id
+    game['spymaster_code'] = spymaster_code
+    return game
 
 
 def _create_game():
@@ -135,9 +143,6 @@ def _create_game():
     # Random tile placement
     tiles = assassin + neutral + first + second
     random.shuffle(tiles)
-    # Generate urls
-    url_player = uuid.uuid4().get_hex()
-    url_spymaster = uuid.uuid4().get_hex()
 
     return {
         'assassin': assassin,
@@ -145,10 +150,19 @@ def _create_game():
         'blue': first if first_label else second,
         'red': second if first_label else first,
         'tiles': tiles,
-        'url_player': url_player,
-        'url_spymaster': url_spymaster,
         'guessed': [],
     }
+
+
+def _create_game_id():
+    games = db.games.find({})
+    names = { game['game_id'] for game in games }
+    eligible = words - names
+    return random.sample(eligible, 1)[0]
+
+
+def _generate_spymaster_code():
+    return random.sample(words, 1)[0]
 
 
 if __name__ == '__main__':
