@@ -5,6 +5,18 @@ class Landing extends React.Component {
   constructor(props) {
     super(props)
     this.state = { gameId: '' }
+    
+    var txtFile = "../../wordlist.txt"          //maybe filepath needs fixing
+    var file = new File(txtFile)
+    file.open("r"); // open file with read access
+    var wordArray = []
+    var i = 0
+    while (!file.eof) {
+      // store each word in the array
+      wordArray[i] = file.readln()
+    }
+    file.close()
+    this.setState({ gameId: wordArray[Math.floor(Math.random() * wordArray.length)] })  
 
     this.createGame = this.createGame.bind(this)
     this.handleChange = this.handleChange.bind(this)
